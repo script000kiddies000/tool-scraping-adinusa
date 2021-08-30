@@ -3,12 +3,14 @@ simpel python tool for scraping platform course adinusa.id
 
 ## instalation
 1. pip3 -r requirements.txt
-2. python3 project_tool_adinusa.py
+2. python3 main.py
 3. input username & password account adinusa.id
 4. select menu if you want
 
 ## menu
-1. get list materi
-2. get materi course
-3. get info user
+1. cek semua list materi
+2. download materi
+3. cek informasi profil
+4. buat wordlist dari semua user adinusa
+5. bruteforce link tugas
 
