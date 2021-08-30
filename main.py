@@ -45,8 +45,11 @@ def login():
 	}
 
 	response = s.post('https://adinusa.id/accounts/login/',headers=headers, data=data)
-	print("status : ",response.status_code)
-	menu()
+	if re.search('Masukkan nama pengguna email dan sandi yang benar', response.text):
+		print('Gagal login!\n')
+		login()
+	else:
+		menu()
 
 
 #function get data user
@@ -93,6 +96,7 @@ def get_info_user():
   """
 
   print(data)
+  menu()
 
 def get_list_materi_user(tampilkan = True):
   global list_materi
@@ -113,6 +117,7 @@ def get_list_materi_user(tampilkan = True):
     """
     if tampilkan:
       print(data)
+  menu()
 
 def get_all_materi(): #with pilihan 1,2,3,4,
 	for materi, key in zip(list_materi, range(len(list_materi))):
@@ -163,8 +168,18 @@ def get_all_materi(): #with pilihan 1,2,3,4,
 		os.system(f'zip -r {base_dir}.zip {base_dir}')
 		get_all_materi() #change this oke ?
 
+def get_user(user_id):
+    try:
+      content = bs(requests.get(f'https://course.adinusa.id/forum/member/profile/{user_id}/').text, 'html.parser')
+      username = content.find('div',{'class':'profile-username'}).text.strip()
+      print('[Found]', username)
+      return username
+    except:
+      print('[Failed]')
+
 def get_all_user():
   list_username = []
+  futures = []
   start = 1
   end = 4000
 
@@ -173,18 +188,13 @@ def get_all_user():
     start = int(input('start user id : '))
     end = int(input('end user id : '))
 
-  for i in range(start, end):
-    try:
-      content = bs(requests.get(f'https://course.adinusa.id/forum/member/profile/{i}/').text, 'html.parser')
-      username = content.find('div',{'class':'profile-username'}).text.strip()
-      print('[Found]', username)
-      list_username.append(username)
-    except KeyboardInterrupt:
-        print("[Alert] stop get user")
-        sys.exit()
-    except:
-      print('[Failed]')
-      continue
+  with concurrent.futures.ThreadPoolExecutor(max_workers=30) as executor:
+    for user_id in range(start, end):
+      futures.append(executor.submit(get_user, user_id))
+
+    for future in futures:
+      if future.result():
+        list_username.append(future.result())
 
 
   print("\nlist user yang di dapatkan : ",len(list_username))
@@ -217,6 +227,10 @@ def proses_cek_tugas():
 
   with concurrent.futures.ThreadPoolExecutor() as executor:
     executor.map(cek_tugas, wordlist)
+  menu()
+
+
+
 def menu():
     print(""" 
       ┌──────────────┐
@@ -245,5 +259,10 @@ def menu():
     	menu() 
   
 if __name__ == "__main__":
-	login()
+  try:
+  	login()
+  except KeyboardInterrupt:
+    print('\nGood bye /ᐠ｡ꞈ｡ᐟ\\')
+    sys.exit()
+
 
