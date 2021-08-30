@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup as bs
 import re
 import requests
 import os
+import sys
 from getpass import getpass
 
 s = requests.session()
@@ -43,7 +44,6 @@ def login():
 	response = s.post('https://adinusa.id/accounts/login/',headers=headers, data=data)
 	print("status : ",response.status_code)
 	menu()
-
 
 
 #function get data user
@@ -160,8 +160,37 @@ def get_all_materi(): #with pilihan 1,2,3,4,
 		os.system(f'zip -r {base_dir}.zip {base_dir}')
 		get_all_materi() #change this oke ?
 
+def get_all_user():
+  list_username = []
+  start = 1
+  end = 4000
+
+  input_manual = input('custom user id (y/N)? (default 1-4000)')
+  if input_manual.lower() == 'y':
+    start = int(input('start user id : '))
+    end = int(input('end user id : '))
+
+  for i in range(start, end):
+    try:
+      content = bs(requests.get(f'https://course.adinusa.id/forum/member/profile/{i}/').text, 'html.parser')
+      username = content.find('div',{'class':'profile-username'}).text.strip()
+      print('[Found]', username)
+      list_username.append(username)
+    except KeyboardInterrupt:
+        print("[Alert] stop get user")
+        sys.exit()
+    except:
+      print('[Failed]')
+      continue
+
+
+  print("\nlist user yang di dapatkan : ",len(list_username))
+  with open('wordlist','w') as f:
+    for i in list_username:
+      f.write(i + "\n")
+
 def menu():
-    print(""" 1. get list materi\n 2. get materi course\n 3. get info user\n""")
+    print(""" 1. get list materi\n 2. get materi course\n 3. get info user\n 4. get all user for wordlist""")
     menu = input("masukan pilihan : ")
     if menu == '1':
     	get_list_materi_user()
@@ -170,6 +199,8 @@ def menu():
     	get_all_materi()
     elif menu == '3':
     	get_info_user()
+    elif menu == '4':
+      get_all_user()
     else:
     	print('ngapain ?')
     	menu() 
